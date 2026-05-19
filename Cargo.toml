@@ -1,0 +1,35 @@
+[package]
+name = "harmony-luau-sys"
+version = "0.0.1"
+edition = "2024"
+description = "Raw Rust bindings and build integration for Luau."
+license = "MIT"
+repository = "https://github.com/lyra-org/harmony-luau-sys"
+links = "luau"
+build = "build.rs"
+include = [
+    "/Cargo.toml",
+    "/LICENSE",
+    "/README.md",
+    "/build.rs",
+    "/src/**",
+    "/tests/**",
+    "/vendor/luau/LICENSE.txt",
+    "/vendor/luau/lua_LICENSE.txt",
+    "/vendor/luau/Common/include/**",
+    "/vendor/luau/Common/src/**",
+    "/vendor/luau/VM/include/**",
+    "/vendor/luau/VM/src/**",
+    "/vendor/luau/Bytecode/include/**",
+    "/vendor/luau/Bytecode/src/**",
+    "/vendor/luau/Ast/include/**",
+    "/vendor/luau/Ast/src/**",
+    "/vendor/luau/Compiler/include/**",
+    "/vendor/luau/Compiler/src/**",
+]
+
+[dependencies]
+libc = "0.2"
+
+[build-dependencies]
+cc = "1"
