@@ -131,20 +131,7 @@ fn compile_compiler(luau_dir: &Path) {
 fn compile_vm(luau_dir: &Path) {
     let mut build = base_build(luau_dir);
     build.include(luau_dir.join("VM/include"));
-    add_cpp_files_except(
-        &mut build,
-        &luau_dir.join("VM/src"),
-        &[
-            "lbuflib.cpp",
-            "ldblib.cpp",
-            "lgcdebug.cpp",
-            "linit.cpp",
-            "lintlib.cpp",
-            "loslib.cpp",
-            "lutf8lib.cpp",
-            "lveclib.cpp",
-        ],
-    );
+    add_cpp_files_except(&mut build, &luau_dir.join("VM/src"), &["lgcdebug.cpp"]);
     build.compile("harmony_luau_vm");
 }
 
