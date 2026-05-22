@@ -81,6 +81,7 @@ unsafe extern "C-unwind" {
     pub fn lua_type(L: *mut lua_State, idx: c_int) -> c_int;
     pub fn lua_isuserdata(L: *mut lua_State, idx: c_int) -> c_int;
     pub fn lua_rawequal(L: *mut lua_State, idx1: c_int, idx2: c_int) -> c_int;
+    pub fn lua_objlen(L: *mut lua_State, idx: c_int) -> c_int;
 
     pub fn lua_tonumberx(L: *mut lua_State, idx: c_int, isnum: *mut c_int) -> lua_Number;
     pub fn lua_toboolean(L: *mut lua_State, idx: c_int) -> c_int;
