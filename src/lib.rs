@@ -86,6 +86,31 @@ mod tests {
         }
     }
 
+    #[test]
+    fn userthread_callback_sees_threads_created_and_freed() {
+        unsafe extern "C-unwind" fn count_threads(parent: *mut lua_State, thread: *mut lua_State) {
+            unsafe {
+                let counts = lua_callback_userdata(thread).cast::<[usize; 2]>();
+                (*counts)[usize::from(parent.is_null())] += 1;
+            }
+        }
+
+        unsafe {
+            let state = lua_newstate(Some(test_alloc), ptr::null_mut());
+            assert!(!state.is_null());
+            let mut counts = [0usize; 2];
+            lua_set_callback_userdata(state, (&raw mut counts).cast());
+            (*lua_callbacks(state)).userthread = Some(count_threads);
+
+            lua_newthread(state);
+            lua_pop(state, 1);
+            lua_gc(state, LUA_GCCOLLECT, 0);
+            assert_eq!(counts, [1, 1]);
+
+            lua_close(state);
+        }
+    }
+
     unsafe extern "C-unwind" fn test_alloc(
         _ud: *mut c_void,
         ptr: *mut c_void,

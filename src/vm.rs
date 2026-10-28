@@ -58,10 +58,22 @@ pub const LUA_GCSETGOAL: c_int = 7;
 pub const LUA_GCSETSTEPMUL: c_int = 8;
 pub const LUA_GCSETSTEPSIZE: c_int = 9;
 
+pub enum lua_Debug {}
+
 #[repr(C)]
-struct RawLuaCallbacks {
-    userdata: *mut c_void,
-    interrupt: lua_InterruptCallback,
+pub struct lua_Callbacks {
+    pub userdata: *mut c_void,
+    pub interrupt: lua_InterruptCallback,
+    pub panic: Option<unsafe extern "C-unwind" fn(L: *mut lua_State, errcode: c_int)>,
+    pub userthread: Option<unsafe extern "C-unwind" fn(LP: *mut lua_State, L: *mut lua_State)>,
+    pub useratom:
+        Option<unsafe extern "C-unwind" fn(L: *mut lua_State, s: *const c_char, l: usize) -> i16>,
+    pub debugbreak: Option<unsafe extern "C-unwind" fn(L: *mut lua_State, ar: *mut lua_Debug)>,
+    pub debugstep: Option<unsafe extern "C-unwind" fn(L: *mut lua_State, ar: *mut lua_Debug)>,
+    pub debuginterrupt: Option<unsafe extern "C-unwind" fn(L: *mut lua_State, ar: *mut lua_Debug)>,
+    pub debugprotectederror: Option<unsafe extern "C-unwind" fn(L: *mut lua_State)>,
+    pub onallocate:
+        Option<unsafe extern "C-unwind" fn(L: *mut lua_State, osize: usize, nsize: usize)>,
 }
 
 unsafe extern "C-unwind" {
@@ -159,8 +171,7 @@ unsafe extern "C-unwind" {
     pub fn lua_gc(L: *mut lua_State, what: c_int, data: c_int) -> c_int;
     pub fn lua_totalbytes(L: *mut lua_State, category: c_int) -> usize;
 
-    #[link_name = "lua_callbacks"]
-    fn lua_callbacks_raw(L: *mut lua_State) -> *mut RawLuaCallbacks;
+    pub fn lua_callbacks(L: *mut lua_State) -> *mut lua_Callbacks;
 }
 
 #[inline]
@@ -211,23 +222,23 @@ pub unsafe fn lua_tostring(L: *mut lua_State, idx: c_int) -> *const c_char {
 #[inline]
 pub unsafe fn lua_set_interrupt_callback(L: *mut lua_State, callback: lua_InterruptCallback) {
     unsafe {
-        (*lua_callbacks_raw(L)).interrupt = callback;
+        (*lua_callbacks(L)).interrupt = callback;
     }
 }
 
 #[inline]
 pub unsafe fn lua_interrupt_callback(L: *mut lua_State) -> lua_InterruptCallback {
-    unsafe { (*lua_callbacks_raw(L)).interrupt }
+    unsafe { (*lua_callbacks(L)).interrupt }
 }
 
 #[inline]
 pub unsafe fn lua_set_callback_userdata(L: *mut lua_State, userdata: *mut c_void) {
     unsafe {
-        (*lua_callbacks_raw(L)).userdata = userdata;
+        (*lua_callbacks(L)).userdata = userdata;
     }
 }
 
 #[inline]
 pub unsafe fn lua_callback_userdata(L: *mut lua_State) -> *mut c_void {
-    unsafe { (*lua_callbacks_raw(L)).userdata }
+    unsafe { (*lua_callbacks(L)).userdata }
 }
