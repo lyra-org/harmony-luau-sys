@@ -12,6 +12,7 @@ include = [
     "/LICENSE",
     "/README.md",
     "/build.rs",
+    "/csrc/**",
     "/src/**",
     "/tests/**",
     "/vendor/luau/LICENSE.txt",

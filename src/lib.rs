@@ -9,10 +9,12 @@
 
 pub mod auxiliary;
 pub mod compiler;
+pub mod protected;
 pub mod vm;
 
 pub use auxiliary::*;
 pub use compiler::*;
+pub use protected::*;
 pub use vm::*;
 
 pub const LUAU_GIT_REV: Option<&str> = option_env!("LUAU_GIT_REV");
@@ -109,6 +111,54 @@ mod tests {
 
             lua_close(state);
         }
+    }
+
+    #[test]
+    fn protected_call_keeps_results_and_reports_errors_at_the_call_height() {
+        unsafe extern "C-unwind" fn push_answer(state: *mut lua_State, _ud: *mut c_void) {
+            unsafe { lua_pushnumber(state, 42.0) };
+        }
+
+        unsafe extern "C-unwind" fn exhaust_memory(state: *mut lua_State, _ud: *mut c_void) {
+            unsafe {
+                lua_pushnil(state);
+                lua_newbuffer(state, LIMITED_ALLOC_MAX + 1);
+            }
+        }
+
+        unsafe {
+            let state = lua_newstate(Some(limited_alloc), ptr::null_mut());
+            assert!(!state.is_null());
+            lua_pushnil(state);
+
+            let status = harmony_luau_protectedcall(state, Some(push_answer), ptr::null_mut());
+            assert_eq!(status, LUA_OK);
+            assert_eq!(lua_gettop(state), 2);
+            assert_eq!(lua_tonumberx(state, -1, ptr::null_mut()), 42.0);
+            lua_pop(state, 1);
+
+            let status = harmony_luau_protectedcall(state, Some(exhaust_memory), ptr::null_mut());
+            assert_eq!(status, LUA_ERRMEM);
+            assert_eq!(lua_gettop(state), 2);
+            let message = CStr::from_ptr(lua_tostring(state, -1)).to_string_lossy();
+            assert_eq!(message, "not enough memory");
+
+            lua_close(state);
+        }
+    }
+
+    const LIMITED_ALLOC_MAX: usize = 1 << 20;
+
+    unsafe extern "C-unwind" fn limited_alloc(
+        ud: *mut c_void,
+        ptr: *mut c_void,
+        osize: usize,
+        nsize: usize,
+    ) -> *mut c_void {
+        if nsize > LIMITED_ALLOC_MAX {
+            return ptr::null_mut();
+        }
+        unsafe { test_alloc(ud, ptr, osize, nsize) }
     }
 
     unsafe extern "C-unwind" fn test_alloc(

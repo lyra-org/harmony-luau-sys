@@ -32,6 +32,11 @@ pub const LUA_GLOBALSINDEX: c_int = -LUAI_MAXCSTACK - 2002;
 
 pub const LUA_OK: c_int = 0;
 pub const LUA_YIELD: c_int = 1;
+pub const LUA_ERRRUN: c_int = 2;
+pub const LUA_ERRSYNTAX: c_int = 3;
+pub const LUA_ERRMEM: c_int = 4;
+pub const LUA_ERRERR: c_int = 5;
+pub const LUA_BREAK: c_int = 6;
 
 pub const LUA_TNONE: c_int = -1;
 pub const LUA_TNIL: c_int = 0;
