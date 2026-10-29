@@ -185,7 +185,10 @@ fn write_header(include_dir: &Path) {
          // Runs func(L, ud) in a protected environment without allocating. On success the values\n\
          // func pushed stay on the stack; on error the stack returns to its height at the call\n\
          // with the error value pushed. Returns a lua_Status code. func must not yield.\n\
-         LUA_API int harmony_luau_protectedcall(lua_State* L, harmony_luau_ProtectedFunction func, void* ud);\n",
+         LUA_API int harmony_luau_protectedcall(lua_State* L, harmony_luau_ProtectedFunction func, void* ud);\n\n\
+         // Sets the boolean Luau fast flag `name` for the whole process; returns 0 if no linked code\n\
+         // defines it. Flags are unsynchronized globals: set them while no Luau code is running.\n\
+         LUA_API int harmony_luau_setfflag(const char* name, int value);\n",
     );
 
     fs::create_dir_all(include_dir)

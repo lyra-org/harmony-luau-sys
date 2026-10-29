@@ -9,11 +9,13 @@
 
 pub mod auxiliary;
 pub mod compiler;
+pub mod flags;
 pub mod protected;
 pub mod vm;
 
 pub use auxiliary::*;
 pub use compiler::*;
+pub use flags::*;
 pub use protected::*;
 pub use vm::*;
 

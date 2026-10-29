@@ -41,6 +41,7 @@ only the standard libraries they intentionally expose.
 - `vm`: raw VM API from `lua.h`
 - `auxiliary`: auxiliary API and standard library openers from `lualib.h`
 - `compiler`: compiler API from `luacode.h`
+- `flags`: `harmony_luau_setfflag`, which sets boolean Luau fast flags by name
 - `protected`: `harmony_luau_protectedcall`, a protected call that does not allocate
 
 ## C and C++ Dependents
@@ -50,4 +51,4 @@ scripts: a list of include directories joined with the platform path separator
 (split it with `std::env::split_paths`). Include `harmony_luau.h` instead of
 `lua.h`, `lualib.h`, or `luacode.h`; it applies the configuration Luau is
 compiled with, such as `LUAI_MAXCSTACK` and C linkage for the API, and declares
-`harmony_luau_protectedcall`.
+the `harmony_luau_*` functions.
