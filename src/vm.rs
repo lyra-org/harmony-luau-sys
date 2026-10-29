@@ -18,7 +18,6 @@ pub type lua_Alloc = Option<
         nsize: usize,
     ) -> *mut c_void,
 >;
-pub type lua_UserdataDtor = Option<unsafe extern "C-unwind" fn(userdata: *mut c_void)>;
 pub type lua_Destructor =
     Option<unsafe extern "C-unwind" fn(L: *mut lua_State, userdata: *mut c_void)>;
 pub type lua_InterruptCallback = Option<unsafe extern "C-unwind" fn(L: *mut lua_State, gc: c_int)>;
@@ -46,6 +45,8 @@ pub const LUA_TFUNCTION: c_int = 8;
 pub const LUA_TUSERDATA: c_int = 9;
 pub const LUA_TTHREAD: c_int = 10;
 pub const LUA_TBUFFER: c_int = 11;
+pub const LUA_TCLASS: c_int = 12;
+pub const LUA_TOBJECT: c_int = 13;
 
 pub const LUA_GCSTOP: c_int = 0;
 pub const LUA_GCRESTART: c_int = 1;
@@ -57,6 +58,7 @@ pub const LUA_GCSTEP: c_int = 6;
 pub const LUA_GCSETGOAL: c_int = 7;
 pub const LUA_GCSETSTEPMUL: c_int = 8;
 pub const LUA_GCSETSTEPSIZE: c_int = 9;
+pub const LUA_GCISPAUSED: c_int = 10;
 
 pub enum lua_Debug {}
 
@@ -68,12 +70,25 @@ pub struct lua_Callbacks {
     pub userthread: Option<unsafe extern "C-unwind" fn(LP: *mut lua_State, L: *mut lua_State)>,
     pub useratom:
         Option<unsafe extern "C-unwind" fn(L: *mut lua_State, s: *const c_char, l: usize) -> i16>,
+    pub userfinalizer: Option<unsafe extern "C-unwind" fn(L: *mut lua_State, co: *mut lua_State)>,
     pub debugbreak: Option<unsafe extern "C-unwind" fn(L: *mut lua_State, ar: *mut lua_Debug)>,
     pub debugstep: Option<unsafe extern "C-unwind" fn(L: *mut lua_State, ar: *mut lua_Debug)>,
     pub debuginterrupt: Option<unsafe extern "C-unwind" fn(L: *mut lua_State, ar: *mut lua_Debug)>,
     pub debugprotectederror: Option<unsafe extern "C-unwind" fn(L: *mut lua_State)>,
-    pub onallocate:
-        Option<unsafe extern "C-unwind" fn(L: *mut lua_State, osize: usize, nsize: usize)>,
+    pub onallocate: Option<
+        unsafe extern "C-unwind" fn(
+            L: *mut lua_State,
+            block: *mut c_void,
+            osize: usize,
+            nsize: usize,
+            memcat: u8,
+            tt: c_int,
+            tag: c_int,
+        ),
+    >,
+    pub preresume: Option<unsafe extern "C-unwind" fn(L: *mut lua_State)>,
+    pub postresume: Option<unsafe extern "C-unwind" fn(L: *mut lua_State)>,
+    pub onfree: Option<unsafe extern "C-unwind" fn(L: *mut lua_State, block: *mut c_void)>,
 }
 
 unsafe extern "C-unwind" {
@@ -121,8 +136,7 @@ unsafe extern "C-unwind" {
     );
     pub fn lua_pushboolean(L: *mut lua_State, b: c_int);
     pub fn lua_pushthread(L: *mut lua_State) -> c_int;
-    pub fn lua_newuserdatadtor(L: *mut lua_State, sz: usize, dtor: lua_UserdataDtor)
-    -> *mut c_void;
+    pub fn lua_newuserdatadtor(L: *mut lua_State, sz: usize, dtor: lua_Destructor) -> *mut c_void;
     pub fn lua_newuserdatatagged(L: *mut lua_State, sz: usize, tag: c_int) -> *mut c_void;
     pub fn lua_newuserdatataggedwithmetatable(
         L: *mut lua_State,
@@ -167,7 +181,7 @@ unsafe extern "C-unwind" {
     pub fn lua_error(L: *mut lua_State) -> !;
     pub fn lua_next(L: *mut lua_State, idx: c_int) -> c_int;
     pub fn lua_ref(L: *mut lua_State, idx: c_int) -> c_int;
-    pub fn lua_unref(L: *mut lua_State, reference: c_int);
+    pub fn lua_unref(L: *mut lua_State, reference: c_int) -> c_int;
     pub fn lua_gc(L: *mut lua_State, what: c_int, data: c_int) -> c_int;
     pub fn lua_totalbytes(L: *mut lua_State, category: c_int) -> usize;
 
